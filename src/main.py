@@ -6,10 +6,12 @@ WIDTH = 800
 HEIGHT = 500
 
 main_char = MainCharacter(WIDTH, HEIGHT)
+bg_img = Actor('background')
 
 def draw():
     screen.clear()
-    main_char.blit()
+    bg_img.draw()
+    main_char.blit(screen)
 
 
 def update():

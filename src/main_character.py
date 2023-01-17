@@ -1,4 +1,4 @@
-from pgzero.builtins import Actor, Rect
+from pgzero.builtins import images
 
 
 class MainCharacter:
@@ -18,21 +18,13 @@ class MainCharacter:
         self.y = 0
 
         self.y_velocity = 0
+        
+        self.image = images.main_character.convert_alpha()
+        self.rect = self.image.get_rect()
 
-        self.actor = Actor('main_character')
-        self.sword_actor = Actor('mythicalsword')
-
-        print(dir(Actor))
-        print(Actor.image)
-        print(self.actor.pos)
-
-        self.rect = Rect(self.actor.x+50, self.actor.y, 10, 10)
-
-
-    def collided(self, rect):
-        if rect.colliderect(self.rect):
-            return True
-        return False
+    def handle_collisions(self):
+        # collision with screen
+        pass
     
     def update_position(self):
         if self.jumping and not self._is_midair():
@@ -49,22 +41,20 @@ class MainCharacter:
             elif self.moving_right:
                 self.x += self.speed
 
-        if self.y + 100 >= self.screen_height:
-            self.y = self.screen_height - 100
+        if self.y + self.rect.height >= self.screen_height:
+            self.y = self.screen_height - self.rect.height
             self.y_velocity = 0
 
-        self.actor.x = self.x
-        self.actor.y = self.y
-        print(self.x, self.y)
+        self.rect.x = self.x
+        self.rect.y = self.y
         # check if x is colliding with anything
         # and put it back
 
     
     def _is_midair(self):
-        if self.y + 100 >= self.screen_height:
+        if self.y + self.rect.height >= self.screen_height:
             return False
         return True
 
-    def blit(self):
-        self.actor.draw()
-        self.sword_actor.draw()
+    def blit(self, screen):
+        screen.blit(self.image, self.rect)
