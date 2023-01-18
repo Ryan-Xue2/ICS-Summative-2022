@@ -1,5 +1,9 @@
 {
     "block_ids": {
+        "0": {
+            "name": "air",
+            "type": "gas"
+        },
         "1": {
             "name": "dirt",
             "type": "solid"
