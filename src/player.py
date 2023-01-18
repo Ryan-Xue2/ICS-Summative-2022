@@ -35,7 +35,7 @@ class Player:
         
         # Player's image as well as the rect representing their hitbox
         # TODO: Resize the image to the correct size for the screen
-        self.image = images.main_character.convert_alpha()
+        self.image = images.player.convert_alpha()
         self.rect = self.image.get_rect()
 
     def handle_collisions(self):

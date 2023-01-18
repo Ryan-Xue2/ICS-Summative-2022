@@ -1,6 +1,8 @@
 import json
 import pgzrun
 
+from pgzero.builtins import images
+
 from player import Player
 from settings import screen_width, screen_height
 
@@ -49,14 +51,24 @@ def on_key_up(key):
     elif key == keys.UP or key == keys.W:
         player.jumping = False
 
-
 def draw_level(level_map):
-    block_width, block_height = 50, 50
+    dirt = images.dirt
+    grass = images.grass
+    stone = images.stone
+    stone_bricks = images.stone_bricks
+    water = images.water
+    print(dir(dirt))
+
     for i, row in enumerate(level_map):
         for j, block in enumerate(row):
-            if block_ids[str(block)]['type'] == 'solid':
-                screen.draw.filled_rect(Rect(j*50, i*50, 50, 50), 'black')
-
+            if block_ids[str(block)]['name'] == 'dirt':
+                screen.blit(dirt, (j*50, i*50))
+            elif block_ids[str(block)]['name'] == 'water':
+                screen.blit(water, (j*50, i*50))
+            elif block_ids[str(block)]['name'] == 'stone':
+                screen.blit(stone, (j*50, i*50))
+            elif block_ids[str(block)]['name'] == 'grass':
+                screen.blit(grass, (j*50, i*50))
 
 def load_next_level():
     pass
