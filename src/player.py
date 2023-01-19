@@ -1,10 +1,10 @@
 import settings
 
-from pgzero.builtins import images
+from pgzero.builtins import images, Rect
 
 
 class Player:
-    def __init__(self, screen_width, screen_height):
+    def __init__(self, screen_width, screen_height, solid_rects, liquid_rects, enemies):
         # The width and height of the game screen
         self.screen_width = screen_width
         self.screen_height = screen_height
@@ -27,9 +27,10 @@ class Player:
         self.moving_left = False
         self.moving_right = False
         self.jumping = False
-        self.collided_left = False
-        self.collided_right = False
-        self.collided_bottom = False
+
+        # An attribute to keep track of which direction the player is facing, 
+        # -1 for left, and 1 for right
+        self.direction_facing = 1
         
         # Float x and y values to keep track of the location of the player
         # since rects can only store integer values
@@ -40,12 +41,15 @@ class Player:
         self.image = images.player.convert_alpha()
         self.rect = self.image.get_rect()
 
-        # Level solid rects
+        # List of rects of the solid and liquid blocks respectively in the level map
+        # Will use these rects to detect and deal with collisions
+        self.solid_rects = solid_rects
+        self.liquid_rects = liquid_rects
+
+        self.enemies = enemies
 
     def handle_collisions(self):
         """Deal with any collisions the player faces with """
-        # Collision with screen
-        # Collision with blocks
         pass
     
     def update_position(self):
@@ -54,12 +58,11 @@ class Player:
         if self.jumping and self.y + self.rect.height == self.screen_height:
             self.y_velocity -= self.jump_power
         
-        # TODO:
         if self.y - self.rect.height < self.screen_height:
             self.y_velocity += self.gravity
 
         # Add y_velocity to the player's y value
-        self.y += self.y_velocity
+        # self.y += self.y_velocity
 
         # Move the player left or right based on the movement flags
         if self.moving_right ^ self.moving_left:
@@ -81,13 +84,27 @@ class Player:
 
     def attack(self):
         """Do an attack animation and damage any enemies in range"""
-        # TODO: calculate the attack rect
-        attack_rect = Rect(0, 0, 0, 0)
+        if self.direction_facing == -1:
+            attack_rect = Rect(
+                self.x-50, self.y, 
+                self.rect.width, self.rect.height)
+        else:
+            attack_rect = Rect(
+                self.x+50, self.y, 
+                self.rect.width, self.rect.height)
+
+        for enemy in self.enemies:
+            continue
+            # TODO: check whether the enemy is in the attack rect of the player
+            # if they are, then deal damage to them, and remove them from the list if 
     
-    def load_level(self, level):
-        """Load a new level"""
-        # maybe can do the setting x y position somewhere else, like in the load new level function in main
-        pass
+    def load_level(self, spawn_x, spawn_y):
+        # reset health, and place player back at spawn point
+        self.hitpoints = settings.player_hitpoints
+        self.x = spawn_x
+        self.y = spawn_y
+        self.rect.x = spawn_x
+        self.rect.y = spawn_y
 
     def blit(self, screen):
         """Draw the player to the screen"""

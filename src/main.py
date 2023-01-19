@@ -7,6 +7,30 @@ from player import Player
 from settings import screen_width, screen_height
 
 
+def load_level(level_map):
+    """Load a level into memory, loading the collision rects, etc."""
+    # Clear the lists holding the solid and liquid rects, as well as the enemies
+    # This will clear all the references to these lists as well, so the lists in the 
+    # player instance will not need to be changed, since those are the same object
+    solid_rects.clear()
+    liquid_rects.clear()
+    enemies.clear()
+
+    for i, row in enumerate(level_map):
+        for j, block in enumerate(row):
+            block_type, name = blocks[block]['type'], blocks[block]['name']
+            block_width, block_height = 50, 50
+            x, y = j*block_width, i*block_height
+
+            if block_type == 'solid':
+                solid_rects.append(Rect(x, y, block_width, block_height))
+            elif block_type == 'liquid':
+                liquid_rects.append(Rect(x, y, block_width, block_height))
+            elif name in ['guard', 'boss']:
+                enemies.append(block)
+            elif name == 'player':
+                player.load_level(j*50, i*50)
+
 # Load the level maps, and the ids and their corresponding block
 # Addtionally, load in what the rewards/buffs the player
 # receives at the end of the level are  
@@ -21,24 +45,27 @@ with open('levels.json') as levels_file:
 solid_rects = []
 liquid_rects = []
 
+# List that will store all enemy instances
+enemies = []
+
 # Global variable cur_level keeping track which level we are currently on
 cur_level = 0
-
-# Load the first level into memory
-# load_level()
 
 # The dimensions of the game screen
 WIDTH = screen_width
 HEIGHT = screen_height
 
 # Player class and the actor for the background
-player = Player(WIDTH, HEIGHT)
-bg_img = Actor('background')
+player = Player(WIDTH, HEIGHT, solid_rects, liquid_rects, enemies)
+bg_img = images.background
+
+# Load the first level into memory
+load_level(level_maps[0])
 
 
 def draw():
     """Draw the background image, the level, and the player to the screen"""
-    bg_img.draw()
+    screen.blit(bg_img, (0, 0))
     draw_level(level_maps[cur_level])
     player.blit(screen)
 
@@ -68,6 +95,10 @@ def on_key_up(key):
         player.jumping = False
 
 
+def on_mouse_down():
+    player.attack()
+
+
 def draw_level(level_map):
     """Draw the blocks in a level to the screen"""
     dirt = images.dirt
@@ -91,12 +122,6 @@ def draw_level(level_map):
                 screen.blit(grass, (x, y))
             elif block_name == 'stone_bricks':
                 screen.blit(stone_bricks, (x, y))
-            
-
-def load_level():
-    """Load a level into memory, loading the collision rects, etc."""
-    pass
-
 
 
 pgzrun.go()
