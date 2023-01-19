@@ -7,16 +7,31 @@ from player import Player
 from settings import screen_width, screen_height
 
 
+# Load the level maps, and the ids and their corresponding block
+# Addtionally, load in what the rewards/buffs the player
+# receives at the end of the level are  
 with open('levels.json') as levels_file:
     levels = json.load(levels_file)
-    block_ids = levels['block_ids']
-    levels = levels['level_maps']
+    blocks = levels['block_ids']
+    blocks = {int(key): value for key, value in blocks.items()}
+    level_maps = levels['level_maps']
 
-print(block_ids)
+# Rects that will store the rects of the solids and the liquids that the
+# player might collide with
+solid_rects = []
+liquid_rects = []
 
+# Global variable cur_level keeping track which level we are currently on
+cur_level = 0
+
+# Load the first level into memory
+# load_level()
+
+# The dimensions of the game screen
 WIDTH = screen_width
 HEIGHT = screen_height
 
+# Player class and the actor for the background
 player = Player(WIDTH, HEIGHT)
 bg_img = Actor('background')
 
@@ -24,7 +39,7 @@ bg_img = Actor('background')
 def draw():
     """Draw the background image, the level, and the player to the screen"""
     bg_img.draw()
-    draw_level(levels[0])
+    draw_level(level_maps[cur_level])
     player.blit(screen)
 
 
@@ -42,6 +57,7 @@ def on_key_down(key):
     elif key == keys.UP or key == keys.W:
         player.jumping = True
 
+
 def on_key_up(key):
     """Handle keyup events"""
     if key == keys.RIGHT or key == keys.D:
@@ -51,26 +67,34 @@ def on_key_up(key):
     elif key == keys.UP or key == keys.W:
         player.jumping = False
 
+
 def draw_level(level_map):
+    """Draw the blocks in a level to the screen"""
     dirt = images.dirt
     grass = images.grass
     stone = images.stone
-    stone_bricks = images.stone_bricks
     water = images.water
-    print(dir(dirt))
+    stone_bricks = images.stone_bricks
 
+    block_width, block_height = 50, 50
     for i, row in enumerate(level_map):
         for j, block in enumerate(row):
-            if block_ids[str(block)]['name'] == 'dirt':
-                screen.blit(dirt, (j*50, i*50))
-            elif block_ids[str(block)]['name'] == 'water':
-                screen.blit(water, (j*50, i*50))
-            elif block_ids[str(block)]['name'] == 'stone':
-                screen.blit(stone, (j*50, i*50))
-            elif block_ids[str(block)]['name'] == 'grass':
-                screen.blit(grass, (j*50, i*50))
+            x, y = j*block_width, i*block_height
+            block_name = blocks[block]['name']
+            if block_name == 'dirt':
+                screen.blit(dirt, (x, y))
+            elif block_name == 'water':
+                screen.blit(water, (x, y))
+            elif block_name == 'stone':
+                screen.blit(stone, (x, y))
+            elif block_name == 'grass':
+                screen.blit(grass, (x, y))
+            elif block_name == 'stone_bricks':
+                screen.blit(stone_bricks, (x, y))
+            
 
-def load_next_level():
+def load_level():
+    """Load a level into memory, loading the collision rects, etc."""
     pass
 
 

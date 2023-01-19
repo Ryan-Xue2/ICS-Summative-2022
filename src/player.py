@@ -16,9 +16,9 @@ class Player:
         self.attack_multiplier = 1
 
         # Player's horizontal move speed, jumping ability, and the amount of gravity applied onto them
-        self.speed = 5
-        self.jump_power = 10
-        self.gravity = 1
+        self.speed = settings.player_speed
+        self.jump_power = settings.player_jump_power
+        self.gravity = settings.player_gravity
         
         # The player's y movement velocity
         self.y_velocity = 0
@@ -27,6 +27,9 @@ class Player:
         self.moving_left = False
         self.moving_right = False
         self.jumping = False
+        self.collided_left = False
+        self.collided_right = False
+        self.collided_bottom = False
         
         # Float x and y values to keep track of the location of the player
         # since rects can only store integer values
@@ -34,22 +37,25 @@ class Player:
         self.y = 0.0
         
         # Player's image as well as the rect representing their hitbox
-        # TODO: Resize the image to the correct size for the screen
         self.image = images.player.convert_alpha()
         self.rect = self.image.get_rect()
 
+        # Level solid rects
+
     def handle_collisions(self):
-        # collision with screen
+        """Deal with any collisions the player faces with """
+        # Collision with screen
+        # Collision with blocks
         pass
     
     def update_position(self):
         """Move the character based on the movement flags and also handle any collisions with objects"""
         # Jump if the jump key is pressed and TODO: the player is on the ground
-        if self.jumping:
+        if self.jumping and self.y + self.rect.height == self.screen_height:
             self.y_velocity -= self.jump_power
         
         # TODO:
-        if self.y -self.rect.height < self.screen_height:
+        if self.y - self.rect.height < self.screen_height:
             self.y_velocity += self.gravity
 
         # Add y_velocity to the player's y value
@@ -73,5 +79,16 @@ class Player:
         # check if the player is colliding with anything
         self.handle_collisions()
 
+    def attack(self):
+        """Do an attack animation and damage any enemies in range"""
+        # TODO: calculate the attack rect
+        attack_rect = Rect(0, 0, 0, 0)
+    
+    def load_level(self, level):
+        """Load a new level"""
+        # maybe can do the setting x y position somewhere else, like in the load new level function in main
+        pass
+
     def blit(self, screen):
+        """Draw the player to the screen"""
         screen.blit(self.image, self.rect)

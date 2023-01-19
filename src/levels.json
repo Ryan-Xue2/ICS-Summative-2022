@@ -35,6 +35,10 @@
         "8": {
             "name": "portal",
             "type": "gas"
+        },
+        "9": {
+            "name": "player",
+            "type": "gas"
         }
     },
     "level_buff": [null, "strength", "health", "speed", null],
