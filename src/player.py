@@ -62,7 +62,7 @@ class Player:
             self.y_velocity += self.gravity
 
         # Add y_velocity to the player's y value
-        # self.y += self.y_velocity
+        self.y += self.y_velocity
 
         # Move the player left or right based on the movement flags
         if self.moving_right ^ self.moving_left:
