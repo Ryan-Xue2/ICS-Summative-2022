@@ -1,3 +1,4 @@
+import os
 import settings
 
 from pgzero.builtins import images, Rect
@@ -27,6 +28,9 @@ class Player:
         self.moving_left = False
         self.moving_right = False
         self.jumping = False
+        self.collided_bottom = False
+        self.collided_left = False
+        self.collided_right = False
 
         # An attribute to keep track of which direction the player is facing, 
         # -1 for left, and 1 for right
@@ -37,9 +41,39 @@ class Player:
         self.x = 0.0
         self.y = 0.0
         
-        # Player's image as well as the rect representing their hitbox
-        self.image = images.player.convert_alpha()
+        # Player's images as well as the rect representing their hitbox
+        self.image = images.kirby.idle.idle_left
         self.rect = self.image.get_rect()
+
+        self.idle_imgs = [
+            'images/idle/idle_left',
+            'images/idle/idle_right'
+        ]
+        
+        self.moving_left_imgs = []
+        for filename in os.listdir('images/kirby/left_walk'):
+            filename = filename.split('.')[0]
+            self.moving_left_imgs.append(f'images/kirby/left_walk/{filename}')
+        
+        self.moving_right_imgs = []
+        for filename in os.listdir('images/kirby/right_walk'):
+            filename = filename.split('.')[0]
+            self.moving_right_imgs.append(f'images/kirby/right_walk/{filename}')
+        
+        self.special_attack_imgs = []
+        for filename in os.listdir('images/kirby/special_attack'):
+            filename = filename.split('.')[0]
+            self.moving_right_imgs.append(f'images/kirby/special_attack/{filename}')
+        
+        self.attack_left_imgs = []
+        for filename in os.listdir('images/kirby/basic_attack_left'):
+            filename = filename.split('.')[0]
+            self.attack_left_imgs.append(f'images/kirby/basic_attack_left/{filename}')
+        
+        self.attack_right_imgs = []
+        for filename in os.listdir('images/kirby/basic_attack_right'):
+            filename = filename.split('.')[0]
+            self.attack_right_imgs.append(f'images/kirby/basic_attack_right/{filename}')
 
         # List of rects of the solid and liquid blocks respectively in the level map
         # Will use these rects to detect and deal with collisions
@@ -50,12 +84,54 @@ class Player:
 
     def handle_collisions(self):
         """Deal with any collisions the player faces with """
-        pass
+        self.collided_bottom = False
+        self.collided_right = False
+        self.collided_left = False
+
+        for rect in self.solid_rects:
+            if self.rect.colliderect(rect):
+                # Figure out whether the player is closing to the horizontal part of the block 
+                # or the vertical part and do the player translation to the one closer
+                dist_left = abs(rect.right - self.rect.left)
+                dist_right = abs(rect.left - self.rect.right)
+                dist_top = abs(rect.bottom - self.rect.top)
+                dist_bottom = abs(rect.top - self.rect.bottom)
+
+                # Collision with right or left side is closer than the collision to the top or bottom
+                if min(dist_left, dist_right) < min(dist_top, dist_bottom):
+                    # Player's left side hit wall
+                    if dist_left < dist_right:
+                        self.collided_left = True
+                        self.x = rect.right + 1
+                        
+                    # Player's right side hit wall
+                    else:
+                        self.collided_right = True
+                        self.x = rect.left - 1 - self.rect.width
+                
+                else:
+                    # Player's feet hit block
+                    if dist_bottom < dist_top:
+                        # Add 1 so that the player continues to collide and so that self.collided_bottom is 
+                        # always True when it appears the player is standing
+                        self.y = rect.top - self.rect.height + 1   
+                        
+                        self.collided_bottom = True
+                        self.y_velocity = 0
+                        
+                    # Player's head hit block
+                    else:
+                        self.y = rect.bottom + 1
+                        self.y_velocity = 0
+
+                # Update the player's position
+                self.rect.x = self.x
+                self.rect.y = self.y
     
     def update_position(self):
         """Move the character based on the movement flags and also handle any collisions with objects"""
         # Jump if the jump key is pressed and TODO: the player is on the ground
-        if self.jumping and self.y + self.rect.height == self.screen_height:
+        if self.jumping and self.collided_bottom:
             self.y_velocity -= self.jump_power
         
         if self.y - self.rect.height < self.screen_height:
@@ -84,19 +160,25 @@ class Player:
 
     def attack(self):
         """Do an attack animation and damage any enemies in range"""
+        # Player is facing left
         if self.direction_facing == -1:
             attack_rect = Rect(
-                self.x-50, self.y, 
+                self.x-10, self.y, 
                 self.rect.width, self.rect.height)
+        # Player is facing right
         else:
             attack_rect = Rect(
-                self.x+50, self.y, 
+                self.x+self.rect.width+10, self.y, 
                 self.rect.width, self.rect.height)
 
+        to_remove = []
         for enemy in self.enemies:
-            continue
-            # TODO: check whether the enemy is in the attack rect of the player
-            # if they are, then deal damage to them, and remove them from the list if 
+            if enemy.rect.colliderect(attack_rect):
+                enemy.hitpoints -= self.attack_dmg * self.attack_multiplier
+                if enemy.hitpoints <= 0:
+                    to_remove.append(enemy)
+        for enemy in to_remove:
+            self.enemies.remove(enemy)
     
     def load_level(self, spawn_x, spawn_y):
         # reset health, and place player back at spawn point

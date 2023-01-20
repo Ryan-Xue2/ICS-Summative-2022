@@ -4,6 +4,7 @@ import pgzrun
 from pgzero.builtins import images
 
 from player import Player
+from guard import Guard
 from settings import screen_width, screen_height
 
 
@@ -27,7 +28,9 @@ def load_level(level_map):
             elif block_type == 'liquid':
                 liquid_rects.append(Rect(x, y, block_width, block_height))
             elif name in ['guard', 'boss']:
-                enemies.append(block)
+                guard = Guard()
+                guard.set_pos(x, y)
+                enemies.append(guard)
             elif name == 'player':
                 player.load_level(j*50, i*50)
 
@@ -62,12 +65,23 @@ bg_img = images.background
 # Load the first level into memory
 load_level(level_maps[0])
 
+# Load all the images into memory
+dirt = images.blocks.dirt
+grass = images.blocks.grass
+stone = images.blocks.stone
+water = images.blocks.water
+stone_bricks = images.blocks.stone_bricks
+portal = images.blocks.portal
+
+# rects
 
 def draw():
     """Draw the background image, the level, and the player to the screen"""
     screen.blit(bg_img, (0, 0))
     draw_level(level_maps[cur_level])
     player.blit(screen)
+    for enemy in enemies:
+        enemy.blit(screen)
 
 
 def update():
@@ -101,11 +115,6 @@ def on_mouse_down():
 
 def draw_level(level_map):
     """Draw the blocks in a level to the screen"""
-    dirt = images.dirt
-    grass = images.grass
-    stone = images.stone
-    water = images.water
-    stone_bricks = images.stone_bricks
 
     block_width, block_height = 50, 50
     for i, row in enumerate(level_map):
@@ -122,6 +131,7 @@ def draw_level(level_map):
                 screen.blit(grass, (x, y))
             elif block_name == 'stone_bricks':
                 screen.blit(stone_bricks, (x, y))
-
+            elif block_name == 'portal':
+                screen.blit(portal, (x, y))
 
 pgzrun.go()
