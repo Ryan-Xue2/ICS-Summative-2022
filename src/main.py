@@ -5,6 +5,7 @@ from pgzero.builtins import images
 
 from player import Player
 from guard import Guard
+from constants import LEFT, RIGHT
 from settings import screen_width, screen_height
 
 
@@ -59,7 +60,7 @@ WIDTH = screen_width
 HEIGHT = screen_height
 
 # Player class and the actor for the background
-player = Player(WIDTH, HEIGHT, solid_rects, liquid_rects, enemies)
+player = Player(WIDTH, HEIGHT, level_maps[0], solid_rects, liquid_rects, enemies)
 bg_img = images.background
 
 # Load the first level into memory
@@ -93,8 +94,10 @@ def on_key_down(key):
     """Handle keydown events"""
     if key == keys.RIGHT or key == keys.D:
         player.moving_right = True
+        player.direction_facing = RIGHT
     elif key == keys.LEFT or key == keys.A:
         player.moving_left = True
+        player.direction_facing = LEFT
     elif key == keys.UP or key == keys.W:
         player.jumping = True
 

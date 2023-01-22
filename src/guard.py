@@ -20,6 +20,9 @@ class Guard:
         self.y = y
         self.rect.x = x
         self.rect.y = y
+    
+    def update_position():
+        pass
 
     def blit(self, screen):
         screen.blit(self.img, self.rect)
