@@ -13,6 +13,7 @@ player_attack_dmg = 1
 guard_hitpoints = 5
 guard_attack_dmg = 2
 guard_speed = 1
+guard_range = 400
 
 # Boss settings
 boss_hitpoints = 100
