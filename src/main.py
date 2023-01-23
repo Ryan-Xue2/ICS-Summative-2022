@@ -74,7 +74,7 @@ def draw():
 
     # Draw empty hearts to the screen representing the hitpoints
     # that the player has lost
-    for j in range(player.hitpoints, player_hitpoints):
+    for j in range(player.hitpoints, player_hitpoints * player.health_multiplier):
         screen.blit(empty_heart, (j*heart.get_width()+1, 0))
         
     # time.sleep(0.1)
