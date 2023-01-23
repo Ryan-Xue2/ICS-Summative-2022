@@ -1,8 +1,9 @@
 import json
 import pgzrun
 
-from player import Player
 from guard import Guard
+from player import Player
+from random import randint
 from constants import LEFT, RIGHT
 from pgzero.builtins import images
 from settings import screen_width, screen_height
@@ -21,7 +22,7 @@ with open('levels.json') as levels_file:
 # player might collide with
 solid_rects = []
 liquid_rects = []
-
+bullets = []
 # List that will store all enemy instances
 enemies = []
 
@@ -52,12 +53,25 @@ def draw():
     player.blit(screen)
     for enemy in enemies:
         enemy.blit(screen)
+    for bullet in bullets:
+        bullet.draw()
 
 
 def update():
     """Update the positions and hitpoints of the player and the enemies"""
     player.update()
-
+    for enemy in enemies:
+        enemy.update()
+    to_remove = []
+    for bullet in bullets:
+        bullet.update()
+        if bullet.actor.right < 0 or bullet.actor.x > WIDTH:
+            to_remove.append(bullet)
+        elif bullet.actor.y > HEIGHT or bullet.actor.right < 0:
+            to_remove.append(bullet)
+    for bullet in to_remove:
+        bullets.remove(bullet)
+    
 
 def on_key_down(key):
     """Handle keydown events"""
@@ -115,6 +129,7 @@ def load_level(level_map):
     # player instance will not need to be changed, since those are the same object
     solid_rects.clear()
     liquid_rects.clear()
+    bullets.clear()
     enemies.clear()
 
     for i, row in enumerate(level_map):
@@ -128,8 +143,9 @@ def load_level(level_map):
             elif block_type == 'liquid':
                 liquid_rects.append(Rect(x, y, block_width, block_height))
             elif name in ['guard', 'boss']:
-                guard = Guard()
+                guard = Guard(player, bullets)
                 guard.set_pos(x, y)
+                clock.schedule_interval(guard.shoot, 5 + randint(-2, 2))
                 enemies.append(guard)
             elif name == 'player':
                 player.load_level(j*50, i*50, level_map)

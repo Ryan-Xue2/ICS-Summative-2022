@@ -19,3 +19,6 @@ guard_range = 400
 boss_hitpoints = 100
 boss_attack_dmg = 10
 boss_speed = 5
+
+# Bullet settings
+bullet_speed = 5

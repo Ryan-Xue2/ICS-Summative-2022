@@ -1,11 +1,12 @@
 import settings
 
 from constants import LEFT, RIGHT
-from pgzero.builtins import images
+from pgzero.builtins import images, Actor
+from bullet import Bullet
 
 
 class Guard:
-    def __init__(self):
+    def __init__(self, player, bullets):
         # Guard stats
         self.hitpoints = settings.guard_hitpoints
         self.attack = settings.guard_attack_dmg
@@ -25,6 +26,11 @@ class Guard:
         self.direction_facing = LEFT
         self.hurt = False
 
+        self.bullets = bullets
+
+        # Player instance os the guard knows where to go and where to shoot
+        self.player = player
+
         # Guard's float x y positions (because rects dont store int values)
         self.x = 0.0
         self.y = 0.0
@@ -36,13 +42,31 @@ class Guard:
         self.rect.x = x
         self.rect.y = y
     
-    def update_position():
-        """Update the guards position"""
-        pass
+    def update(self):
+        """Update the guard's direction facing"""
+        if abs(self.x - self.player.x) < self.range:
+            if self.x < self.player.x:
+                self.direction_facing = RIGHT
+            else:
+                self.direction_facing = LEFT
     
     def shoot(self):
-        """Shoot a bullet"""
-        pass
+        """Shoot a bullet in the direction of the player"""
+        bullet = Bullet()
+
+        # Make the bullet seem like it started from the guard's gun
+        if self.direction_facing == LEFT:
+            bullet.x, bullet.y = self.rect.midleft
+        else:
+            bullet.x, bullet.y = self.rect.midright
+        bullet.actor.x = bullet.x
+        bullet.actor.y = bullet.y
+
+        # Angle the bullet towards the player
+        angle = bullet.actor.angle_to(self.player.rect.center)
+        bullet.actor.angle = angle
+        self.bullets.append(bullet)
+
 
     def blit(self, screen):
         """Draw the guard image to the screen"""
