@@ -59,7 +59,7 @@ def draw():
 
 def update():
     """Update the positions and hitpoints of the player and the enemies"""
-    player.update()
+    player.update()  # Update the player's position, state, etc
     for enemy in enemies:
         enemy.update()
     to_remove = []
