@@ -44,7 +44,7 @@ class Guard:
     
     def update(self):
         """Update the guard's direction facing"""
-        if abs(self.x - self.player.x) < self.range:
+        if abs(self.x - self.player.x) <= self.range:
             if self.x < self.player.x:
                 self.direction_facing = RIGHT
             else:
@@ -52,13 +52,17 @@ class Guard:
     
     def shoot(self):
         """Shoot a bullet in the direction of the player"""
+        # Don't shoot if the player is not in range
+        if (self.player.x - self.x) > self.range:
+            return
+            
         bullet = Bullet()
 
         # Make the bullet seem like it started from the guard's gun
         if self.direction_facing == LEFT:
-            bullet.actor.x, bullet.actor.y = self.rect.midleft
+            bullet.actor.left, bullet.actor.top = self.rect.midleft
         else:
-            bullet.actor.x, bullet.actor.y = self.rect.midright
+            bullet.actor.left, bullet.actor.top = self.rect.midright
 
         # Angle the bullet towards the player
         angle = bullet.actor.angle_to(self.player.rect.center)

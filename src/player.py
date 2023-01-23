@@ -1,8 +1,9 @@
 import os
+import time
 import settings
 
 from pgzero.builtins import images, Rect
-from constants import LEFT, RIGHT, IDLE, WALKING, ATTACKING, JUMPING, FALLING
+from constants import HURT, LEFT, RIGHT, IDLE, WALKING, ATTACKING, JUMPING, FALLING
 
 
 class Player:
@@ -19,6 +20,7 @@ class Player:
 
         # Player's horizontal move speed, jumping ability, and the amount of gravity applied onto them
         self.speed = settings.player_speed
+        self.speed_multiplier = 1
         self.jump_power = settings.player_jump_power
         self.gravity = settings.player_gravity
         
@@ -66,6 +68,13 @@ class Player:
         for filename in os.listdir('images/kirby/right_walk'):
             filename = filename.split('.')[0]
             self.moving_right_imgs.append(f'kirby/right_walk/{filename}')
+        
+        self.hurt_images = []
+        for filename in os.listdir('images/kirby/hurt'):
+            filename = filename.split('.')[0]
+            self.hurt_images.append(f'kirby/hurt/{filename}')
+        self.hurt_images.extend(self.hurt_images[:])  # Make the hurt images repeat so the animation is longer
+
         
         # Images of the player attacking to the left
         self.attack_left_imgs = []
@@ -173,9 +182,9 @@ class Player:
         # Move the player left or right based on the movement flags
         if self.moving_right ^ self.moving_left:
             if self.moving_left:
-                self.x -= self.speed
+                self.x -= self.speed * self.speed_multiplier
             elif self.moving_right:
-                self.x += self.speed
+                self.x += self.speed * self.speed_multiplier
 
         # Stop y velocity and put y value in right place if clipping through floor 
         if self.y + self.rect.height >= self.screen_height:
@@ -191,7 +200,7 @@ class Player:
         # Update the player's state
         # Don't change the state if the player is attacking, to not 
         # interrupt the attack animation
-        if self._state != ATTACKING:
+        if self._state not in [ATTACKING, HURT]:
             # Player is midair
             if not self.collided_bottom:
                 if self.y_velocity > 0:
@@ -237,6 +246,12 @@ class Player:
         # Remove enemies who have lost all their hitpoints from the list
         for enemy in to_remove:
             self.enemies.remove(enemy)
+
+    def hurt(self, damage):
+        """Set kirby's state to hurt, and deal damage to kirby"""
+        self._state = HURT
+        self._frame = 0
+        self.hitpoints -= damage
     
     def load_level(self, spawn_x, spawn_y, level_map):
         """
@@ -245,7 +260,7 @@ class Player:
         need to update the solid and liquid rects because those are changed
         in the load_level function in main.py.
         """
-        self.hitpoints = settings.player_hitpoints
+        self.hitpoints = settings.player_hitpoints * self.health_multiplier
         self.x = spawn_x
         self.y = spawn_y
         self.rect.x = spawn_x
@@ -307,6 +322,20 @@ class Player:
                 image = self.left_jump_imgs[-1]
             else:
                 image = self.right_jump_imgs[-1]
+
+        elif self._state == HURT:
+            image = self.hurt_images[self._frame]
+            print('hurt')
+            print(self._frame)
+            
+            if self._frame == len(self.hurt_images) - 1:
+                if self.collided_bottom:
+                    self._state = WALKING if self.moving_left ^ self.moving_right else IDLE
+                elif self.y_velocity > 0:
+                    self._state = FALLING
+                else:
+                    self._state = JUMPING
+                self._frame = 0
 
         self._frame += 1
         screen.blit(image, self.rect)
