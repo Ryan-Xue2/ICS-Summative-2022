@@ -67,11 +67,6 @@ class Player:
             filename = filename.split('.')[0]
             self.moving_right_imgs.append(f'kirby/right_walk/{filename}')
         
-        # self.special_attack_imgs = []
-        # for filename in os.listdir('images/kirby/special_attack'):
-        #     filename = filename.split('.')[0]
-        #     self.moving_right_imgs.append(f'kirby/special_attack/{filename}')
-        
         # Images of the player attacking to the left
         self.attack_left_imgs = []
         for filename in os.listdir('images/kirby/basic_attack_left'):
@@ -117,8 +112,7 @@ class Player:
         self.collided_right = False
         self.collided_left = False
 
-        # TODO: to improve the collision, dont check sides that are in between two solids
-        # also becaues i need the code to be less similar
+        # TODO: to improve the collision, dont check sides that are in between two solid blocks
 
         for rect in self.solid_rects:
             if not self.rect.colliderect(rect):

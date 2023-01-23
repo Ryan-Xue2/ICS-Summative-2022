@@ -56,11 +56,9 @@ class Guard:
 
         # Make the bullet seem like it started from the guard's gun
         if self.direction_facing == LEFT:
-            bullet.x, bullet.y = self.rect.midleft
+            bullet.actor.x, bullet.actor.y = self.rect.midleft
         else:
-            bullet.x, bullet.y = self.rect.midright
-        bullet.actor.x = bullet.x
-        bullet.actor.y = bullet.y
+            bullet.actor.x, bullet.actor.y = self.rect.midright
 
         # Angle the bullet towards the player
         angle = bullet.actor.angle_to(self.player.rect.center)

@@ -43,7 +43,7 @@ grass = images.blocks.grass
 stone = images.blocks.stone
 water = images.blocks.water
 stone_bricks = images.blocks.stone_bricks
-portal = images.blocks.portal
+portal = Actor('blocks/portal')
 
 
 def draw():
@@ -62,15 +62,31 @@ def update():
     player.update()  # Update the player's position, state, etc
     for enemy in enemies:
         enemy.update()
+
     to_remove = []
     for bullet in bullets:
         bullet.update()
+        # Bullet flew out the left or right
         if bullet.actor.right < 0 or bullet.actor.x > WIDTH:
             to_remove.append(bullet)
+        # Bullet flew out the top or bottom
         elif bullet.actor.y > HEIGHT or bullet.actor.right < 0:
             to_remove.append(bullet)
+        # The bullet hit a block
+        elif bullet.actor.collidelist(solid_rects) != -1:
+            to_remove.append(bullet)
+        # The bullet hit the player
+        elif bullet.actor.colliderect(player.rect):
+            player.hitpoints -= 1
+            if player.hitpoints <= 0:
+                print('dead')
+            to_remove.append(bullet)
+
     for bullet in to_remove:
         bullets.remove(bullet)
+    
+    if len(enemies) == 0:
+        print('portal should opne')
     
 
 def on_key_down(key):
@@ -119,7 +135,10 @@ def draw_level(level_map):
             elif block_name == 'stone_bricks':
                 screen.blit(stone_bricks, (x, y))
             elif block_name == 'portal':
-                screen.blit(portal, (x, y))
+                # screen.blit(portal, (x, y))
+                portal.left = x 
+                portal.top = y
+                portal.draw()
 
 
 def load_level(level_map):

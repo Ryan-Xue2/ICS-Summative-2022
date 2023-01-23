@@ -7,9 +7,6 @@ import math
 class Bullet:
     def __init__(self):
         self.actor = Actor('bullet')
-        # Must keep x and y float values because actor.x and actor.y are only integer values
-        self.x = 0.0
-        self.y = 0.0
         self.solid_rects = None
         self.speed = settings.bullet_speed
     
