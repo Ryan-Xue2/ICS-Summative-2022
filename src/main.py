@@ -2,6 +2,7 @@ import sys
 import json
 import time
 import pgzrun
+import settings
 
 from boss import Boss
 from guard import Guard
@@ -9,7 +10,6 @@ from player import Player
 from random import randint
 from constants import HURT, LEFT, RIGHT
 from pgzero.builtins import images
-from settings import screen_width, screen_height, player_hitpoints
 
 
 # Load the level maps, and the ids and their corresponding block
@@ -35,12 +35,12 @@ bullets = []
 cur_level = 0
 
 # The dimensions of the game screen
-WIDTH = screen_width
-HEIGHT = screen_height
+WIDTH = settings.screen_width
+HEIGHT = settings.screen_height
 
 # The player instance as well as the boss
-player = Player(WIDTH, HEIGHT, level_maps[0], solid_rects, liquid_rects, enemies)
-boss = Boss(player)
+player = Player(WIDTH, HEIGHT, level_maps[cur_level], solid_rects, liquid_rects, enemies)
+boss = None
 
 # The background images
 bg_img = images.background
@@ -84,16 +84,28 @@ def draw():
 
     # Draw empty hearts to the screen representing the hitpoints
     # that the player has lost
-    for j in range(player.hitpoints, player_hitpoints * player.health_multiplier):
+    max_player_hp = settings.player_hitpoints * player.health_multiplier
+    for j in range(player.hitpoints, max_player_hp):
         screen.blit(empty_heart, (j*heart.get_width()+1, 0))
-    
-    boss.actor.draw()
+
+    # Draw the boss if they exist
+    if boss is not None:
+        boss.blit(screen)
+        # Draw boss bar
+        max_boss_hp = settings.boss_hitpoints
+        boss_hp = boss.hitpoints
+        percent_health = boss_hp / max_boss_hp
+        bar_len = 600
+        screen.draw.filled_rect(Rect(0, heart.get_height()+5, bar_len * percent_health, 30), (255, 0, 0))  # Draw boss bar 5 pixels down the hearts
+        screen.draw.filled_rect(Rect(bar_len*percent_health, heart.get_height()+5, bar_len * (1-percent_health), 30), (50, 50, 50)) 
+
 
 
 def update():
     """Update the positions and hitpoints of the player and the enemies"""
-    global cur_level
+    global boss
     global attacked
+    global cur_level
 
     player.update()  # Update the player's position, state, etc
 
@@ -116,9 +128,7 @@ def update():
         # The bullet hit the player
         elif bullet.actor.colliderect(player.rect):
             # Remove health from the player
-            player.hitpoints -= 1
-            player._state = HURT
-            player._frame = 0
+            player.hurt(settings.guard_attack_dmg)
             if player.hitpoints <= 0:
                 # If player died, then restart the level
                 load_level(level_maps[cur_level])
@@ -129,11 +139,8 @@ def update():
     for bullet in to_remove:
         bullets.remove(bullet)
     
-    if boss.animation is None or not boss.animation.running and cur_level == 4:
-        boss.attack()
-    
     # Killed all the enemies so portal opens
-    if len(enemies) == 0:
+    if len(enemies) == 0 and boss is None:
         if portal.colliderect(player.rect):
             # Apply any buff that are given
             buff = level_buffs[cur_level]
@@ -176,8 +183,11 @@ def on_key_up(key):
 
 
 def on_mouse_down():
+    global boss
     """Attack when the player clicks the left or right mouse button"""
     player.basic_attack()
+    if boss is not None and boss.hitpoints < 0:
+        boss = None
 
 
 def draw_level(level_map):
@@ -205,6 +215,8 @@ def draw_level(level_map):
 
 
 def load_level(level_map):
+    global boss
+
     """Load a level into memory, loading the collision rects, etc."""
     # Clear the lists holding the solid and liquid rects, as well as the enemies
     # and the bullets
@@ -234,9 +246,11 @@ def load_level(level_map):
                 # clock.schedule_interval(guard.shoot, 0.5)
                 enemies.append(guard)
             elif name == 'player':
-                player.load_level(j*50, i*50, level_map)
+                player.load_level(j*block_width, i*block_height, level_map)
             elif name == 'boss':
-                pass
+                boss = Boss(player)
+                player.boss = boss
+                clock.schedule_interval(boss.attack, 1)  # Make the boss attack every three 3 seconds  # BUG: boss still attacks after dead because weak ref kept in player isntance
 
                 
 # Load the first level into memory

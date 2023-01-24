@@ -7,7 +7,7 @@ from constants import HURT, LEFT, RIGHT, IDLE, WALKING, ATTACKING, JUMPING, FALL
 
 
 class Player:
-    def __init__(self, screen_width, screen_height, level_map, solid_rects, liquid_rects, enemies):
+    def __init__(self, screen_width, screen_height, level_map, solid_rects, liquid_rects, enemies, boss=None):
         # The width and height of the game screen
         self.screen_width = screen_width
         self.screen_height = screen_height
@@ -110,10 +110,14 @@ class Player:
         self.solid_rects = solid_rects
         self.liquid_rects = liquid_rects
 
+        self.in_liquid = False
+
         # The map of the current level
         self.level_map = level_map
 
         self.enemies = enemies
+
+        self.boss = boss
 
     def handle_collisions(self):
         """Deal with any collisions the player faces with """
@@ -163,6 +167,11 @@ class Player:
 
             self.rect.x = self.x
             self.rect.y = self.y
+        
+        if self.rect.collidelist(self.liquid_rects) != -1:
+            self.in_liquid = True
+        else:
+            self.in_liquid = False
     
     def update(self):
         """Move the character based on the movement flags and also handle any collisions with objects"""
@@ -182,9 +191,9 @@ class Player:
         # Move the player left or right based on the movement flags
         if self.moving_right ^ self.moving_left:
             if self.moving_left:
-                self.x -= self.speed * self.speed_multiplier
+                self.x -= self.speed * self.speed_multiplier * (0.3 if self.in_liquid else 1)
             elif self.moving_right:
-                self.x += self.speed * self.speed_multiplier
+                self.x += self.speed * self.speed_multiplier * (0.3 if self.in_liquid else 1)
 
         # Stop y velocity and put y value in right place if clipping through floor 
         if self.y + self.rect.height >= self.screen_height:
@@ -246,6 +255,10 @@ class Player:
         # Remove enemies who have lost all their hitpoints from the list
         for enemy in to_remove:
             self.enemies.remove(enemy)
+        
+        if self.boss is not None:
+            if self.boss.actor.colliderect(attack_rect):
+                self.boss.hitpoints -= self.attack_dmg * self.attack_multiplier
 
     def hurt(self, damage):
         """Set kirby's state to hurt, and deal damage to kirby"""
