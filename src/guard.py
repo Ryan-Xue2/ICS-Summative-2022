@@ -1,7 +1,7 @@
 import settings
 
 from constants import LEFT, RIGHT
-from pgzero.builtins import images, Actor
+from pgzero.builtins import images, Actor, clock
 from bullet import Bullet
 
 
@@ -69,7 +69,6 @@ class Guard:
         bullet.actor.angle = angle
         self.bullets.append(bullet)
 
-
     def blit(self, screen):
         """Draw the guard image to the screen"""
         image = None
@@ -79,6 +78,7 @@ class Guard:
             else:
                 image = self.img_hurt
             self.hurt = False
+
         elif self.direction_facing == LEFT:
             image = self.img_left
         else:

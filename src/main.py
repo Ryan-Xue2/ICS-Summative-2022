@@ -3,6 +3,7 @@ import json
 import time
 import pgzrun
 
+from boss import Boss
 from guard import Guard
 from player import Player
 from random import randint
@@ -25,9 +26,10 @@ with open('levels.json') as levels_file:
 # player might collide with
 solid_rects = []
 liquid_rects = []
-bullets = []
-# List that will store all enemy instances
+
+# List that will store all enemy instances as well as the bullets
 enemies = []
+bullets = []
 
 # Global variable cur_level keeping track which level we are currently on
 cur_level = 0
@@ -36,9 +38,13 @@ cur_level = 0
 WIDTH = screen_width
 HEIGHT = screen_height
 
-# Player class and the background image
+# The player instance as well as the boss
 player = Player(WIDTH, HEIGHT, level_maps[0], solid_rects, liquid_rects, enemies)
+boss = Boss(player)
+
+# The background images
 bg_img = images.background
+bg_img2 = images.castle_background
 
 # Load all the images into memory
 # Block images
@@ -53,10 +59,14 @@ portal = Actor('blocks/portal')
 heart = images.heart
 empty_heart = images.empty_heart
 
+attacked = False 
 
 def draw():
     """Draw the background image, the level, and the player to the screen"""
-    screen.blit(bg_img, (0, 0))
+    if cur_level == 0 or cur_level == 4:
+        screen.blit(bg_img, (0, 0))
+    else:
+        screen.blit(bg_img2, (0, 0))
     draw_level(level_maps[cur_level])
     player.blit(screen)
 
@@ -76,13 +86,14 @@ def draw():
     # that the player has lost
     for j in range(player.hitpoints, player_hitpoints * player.health_multiplier):
         screen.blit(empty_heart, (j*heart.get_width()+1, 0))
-        
-    # time.sleep(0.1)
+    
+    boss.actor.draw()
 
 
 def update():
     """Update the positions and hitpoints of the player and the enemies"""
     global cur_level
+    global attacked
 
     player.update()  # Update the player's position, state, etc
 
@@ -109,14 +120,22 @@ def update():
             player._state = HURT
             player._frame = 0
             if player.hitpoints <= 0:
-                print('dead')
+                # If player died, then restart the level
+                load_level(level_maps[cur_level])
+                to_remove = []
+                break  # break out of the loop to avoid getting an error trying to remove things that are already removed
             to_remove.append(bullet)
 
     for bullet in to_remove:
         bullets.remove(bullet)
     
+    if boss.animation is None or not boss.animation.running and cur_level == 4:
+        boss.attack()
+    
+    # Killed all the enemies so portal opens
     if len(enemies) == 0:
         if portal.colliderect(player.rect):
+            # Apply any buff that are given
             buff = level_buffs[cur_level]
             if buff is not None:
                 if buff == 'strength':
@@ -128,8 +147,6 @@ def update():
 
             cur_level += 1
             if cur_level == len(level_maps):
-                print('No more levels')
-                print(cur_level)
                 sys.exit()
             level_map = level_maps[cur_level]
             load_level(level_map)
@@ -179,10 +196,9 @@ def draw_level(level_map):
                 screen.blit(stone, (x, y))
             elif block_name == 'grass':
                 screen.blit(grass, (x, y))
-            elif block_name == 'stone_bricks':
+            elif block_name == 'stone_brick':
                 screen.blit(stone_bricks, (x, y))
             elif block_name == 'portal':
-                # screen.blit(portal, (x, y))
                 portal.left = x 
                 portal.top = y
                 portal.draw()
@@ -209,7 +225,7 @@ def load_level(level_map):
                 solid_rects.append(Rect(x, y, block_width, block_height))
             elif block_type == 'liquid':
                 liquid_rects.append(Rect(x, y, block_width, block_height))
-            elif name in ['guard', 'boss']:
+            elif name == 'guard':
                 # Create a guard, set its x y position to the block
                 # and make it shoot every 2-4 seconds
                 guard = Guard(player, bullets)
@@ -219,6 +235,8 @@ def load_level(level_map):
                 enemies.append(guard)
             elif name == 'player':
                 player.load_level(j*50, i*50, level_map)
+            elif name == 'boss':
+                pass
 
                 
 # Load the first level into memory
