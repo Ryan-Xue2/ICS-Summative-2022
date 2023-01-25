@@ -40,8 +40,7 @@ class Player:
         # An attribute to keep track of which direction the player is facing, 
         # -1 for left, and 1 for right
         self.direction_facing = RIGHT
-        
-        # Float x and y values to keep track of the location of the player
+        # Float x and y values to keep track of the location of the playerdw
         # since rects can only store integer values
         self.x = 0.0
         self.y = 0.0
