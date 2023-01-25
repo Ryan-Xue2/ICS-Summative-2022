@@ -168,6 +168,7 @@ class Player:
             self.rect.x = self.x
             self.rect.y = self.y
         
+        # Check if kirby is in liquid
         if self.rect.collidelist(self.liquid_rects) != -1:
             self.in_liquid = True
         else:
@@ -179,7 +180,7 @@ class Player:
         # Jump if the jump key is pressed and player is on a platform
         if self.jumping and self.collided_bottom:
             self._frame = 0  # Reset the animation frame to the first one
-            self.y_velocity -= self.jump_power
+            self.y_velocity -= self.jump_power * (0.7 if self.in_liquid else 1)
         
         # Apply gravity to the y velocity if the player is in the air
         if not self.collided_bottom:
@@ -191,9 +192,9 @@ class Player:
         # Move the player left or right based on the movement flags
         if self.moving_right ^ self.moving_left:
             if self.moving_left:
-                self.x -= self.speed * self.speed_multiplier * (0.3 if self.in_liquid else 1)
+                self.x -= self.speed * self.speed_multiplier * (0.5 if self.in_liquid else 1)
             elif self.moving_right:
-                self.x += self.speed * self.speed_multiplier * (0.3 if self.in_liquid else 1)
+                self.x += self.speed * self.speed_multiplier * (0.5 if self.in_liquid else 1)
 
         # Stop y velocity and put y value in right place if clipping through floor 
         if self.y + self.rect.height >= self.screen_height:
@@ -256,8 +257,9 @@ class Player:
         for enemy in to_remove:
             self.enemies.remove(enemy)
         
+        # Deal damage to boss if they are in attack rect
         if self.boss is not None:
-            if self.boss.actor.colliderect(attack_rect):
+            if self.boss.rect.colliderect(attack_rect):
                 self.boss.hitpoints -= self.attack_dmg * self.attack_multiplier
 
     def hurt(self, damage):
@@ -338,8 +340,6 @@ class Player:
 
         elif self._state == HURT:
             image = self.hurt_images[self._frame]
-            print('hurt')
-            print(self._frame)
             
             if self._frame == len(self.hurt_images) - 1:
                 if self.collided_bottom:

@@ -94,10 +94,10 @@ def draw():
         # Draw boss bar
         max_boss_hp = settings.boss_hitpoints
         boss_hp = boss.hitpoints
-        percent_health = boss_hp / max_boss_hp
+        percent_hp = boss_hp / max_boss_hp
         bar_len = 600
-        screen.draw.filled_rect(Rect(0, heart.get_height()+5, bar_len * percent_health, 30), (255, 0, 0))  # Draw boss bar 5 pixels down the hearts
-        screen.draw.filled_rect(Rect(bar_len*percent_health, heart.get_height()+5, bar_len * (1-percent_health), 30), (50, 50, 50)) 
+        screen.draw.filled_rect(Rect(0, heart.get_height()+5, bar_len*percent_hp, 30), (255, 0, 0))  # Draw boss bar 5 pixels down the hearts
+        screen.draw.filled_rect(Rect(bar_len*percent_hp, heart.get_height()+5, bar_len * (1-percent_hp), 30), (50, 50, 50))  # Draw the broken
 
 
 
@@ -157,6 +157,19 @@ def update():
                 sys.exit()
             level_map = level_maps[cur_level]
             load_level(level_map)
+    
+    # Update the boss
+    if boss is not None:
+        # Attack as long as the boss is not in the middle of an attack
+        # and is also not in the attack animation at the end
+        if not boss.dashing and not boss.just_attacked:
+            boss.dash_attack()
+        else:
+            boss.update()
+    
+    # If player lost all their hitpoints (from boss attack), then reload the level
+    if player.hitpoints <= 0:
+        load_level(level_maps[cur_level])
             
     
 
@@ -192,12 +205,16 @@ def on_mouse_down():
 
 def draw_level(level_map):
     """Draw the blocks in a level to the screen"""
-
     block_width, block_height = 50, 50
     for i, row in enumerate(level_map):
         for j, block in enumerate(row):
+            # Calculate the x and y position of the block
             x, y = j*block_width, i*block_height
+
+            # Get the name of the block
             block_name = blocks[block]['name']
+        
+            # Draw the block to the screen
             if block_name == 'dirt':
                 screen.blit(dirt, (x, y))
             elif block_name == 'water':
@@ -208,6 +225,7 @@ def draw_level(level_map):
                 screen.blit(grass, (x, y))
             elif block_name == 'stone_brick':
                 screen.blit(stone_bricks, (x, y))
+            # Portal is an actor, not just an image surface because 
             elif block_name == 'portal':
                 portal.left = x 
                 portal.top = y
@@ -250,7 +268,8 @@ def load_level(level_map):
             elif name == 'boss':
                 boss = Boss(player)
                 player.boss = boss
-                clock.schedule_interval(boss.attack, 1)  # Make the boss attack every three 3 seconds  # BUG: boss still attacks after dead because weak ref kept in player isntance
+                boss.set_pos(j*block_width, i*block_height)
+                # clock.schedule_interval(boss.attack, 1)  # Make the boss attack every three 3 seconds  # BUG: boss still attacks after dead because weak ref kept in player isntance
 
                 
 # Load the first level into memory
