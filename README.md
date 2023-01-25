@@ -1,6 +1,5 @@
 Storyline:
-good god create life
-bad god rebels against good god and now things bad
-to beat bad god, player must collect the three legendary item thigns that will give the player buffs
-these items are found in a castle sortof thingy
-then go beat the bad god
+Good god create life
+Idi rebels against good god and now things are bad
+To beat Idi, the player must collect buffs by completing levels in a castle
+Then the player will go face the Idi in the last level
