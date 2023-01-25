@@ -16,7 +16,7 @@ guard_speed = 1
 guard_range = 400
 
 # Boss settings
-boss_hitpoints = 300
+boss_hitpoints = 250
 boss_attack_dmg = 5
 boss_speed = 5
 
