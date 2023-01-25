@@ -1,8 +1,8 @@
 import settings
 
-from constants import LEFT, RIGHT
-from pgzero.builtins import images, Actor, clock
 from bullet import Bullet
+from constants import LEFT, RIGHT
+from pgzero.builtins import images
 
 
 class Guard:
@@ -22,10 +22,13 @@ class Guard:
         # Guard's hitbox
         self.rect = self.img.get_rect()
 
-        # 
+        # Direction that the guard is facing
         self.direction_facing = LEFT
+
+        # Whether the guard just got hit
         self.hurt = False
 
+        # List of bullets
         self.bullets = bullets
 
         # Player instance os the guard knows where to go and where to shoot
@@ -44,6 +47,7 @@ class Guard:
     
     def update(self):
         """Update the guard's direction facing"""
+        # If the guard is in range, then turn in the player's direction
         if abs(self.x - self.player.x) <= self.range:
             if self.x < self.player.x:
                 self.direction_facing = RIGHT
@@ -73,14 +77,19 @@ class Guard:
         """Draw the guard image to the screen"""
         image = None
         if self.hurt:
+            # Guard hurt and facing left
             if self.direction_facing == LEFT:
                 image = self.img_hurt_left
+            # Guard hurt and facing right
             else:
                 image = self.img_hurt
+            # Make the guard stop hurting
             self.hurt = False
 
+        # Guard is not hurt and facing left
         elif self.direction_facing == LEFT:
             image = self.img_left
+        # Guard is facing right
         else:
             image = self.img
 

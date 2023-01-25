@@ -74,7 +74,6 @@ class Player:
             filename = filename.split('.')[0]
             self.hurt_images.append(f'kirby/hurt/{filename}')
         self.hurt_images.extend(self.hurt_images[:])  # Make the hurt images repeat so the animation is longer
-
         
         # Images of the player attacking to the left
         self.attack_left_imgs = []
@@ -110,13 +109,16 @@ class Player:
         self.solid_rects = solid_rects
         self.liquid_rects = liquid_rects
 
+        # Whether the player is in a liquid
         self.in_liquid = False
 
         # The map of the current level
         self.level_map = level_map
 
+        # List of the guards
         self.enemies = enemies
 
+        # The boss instance
         self.boss = boss
 
     def handle_collisions(self):
@@ -125,12 +127,13 @@ class Player:
         self.collided_right = False
         self.collided_left = False
 
-        # TODO: to improve the collision, dont check sides that are in between two solid blocks
+        # TODO: To improve the collision, dont check sides that are in between two solid blocks
 
         for rect in self.solid_rects:
             if not self.rect.colliderect(rect):
                 continue
-
+            
+            # Find the absolute distances of the player's sides to the rect's sides 
             dist_left = abs(rect.right - self.rect.left)
             dist_right = abs(rect.left - self.rect.right)
             dist_top = abs(rect.bottom - self.rect.top)
@@ -165,10 +168,11 @@ class Player:
                     self.y = rect.bottom + 1
                     self.y_velocity = 0
 
+            # Update the player's rect position
             self.rect.x = self.x
             self.rect.y = self.y
         
-        # Check if kirby is in liquid
+        # Check if kirby is in liquid and if they are then set self.in_liquid to True
         if self.rect.collidelist(self.liquid_rects) != -1:
             self.in_liquid = True
         else:
@@ -180,6 +184,7 @@ class Player:
         # Jump if the jump key is pressed and player is on a platform
         if self.jumping and self.collided_bottom:
             self._frame = 0  # Reset the animation frame to the first one
+            # Jump but reduce jump power by 30% if the player is in a liquid
             self.y_velocity -= self.jump_power * (0.7 if self.in_liquid else 1)
         
         # Apply gravity to the y velocity if the player is in the air
@@ -191,16 +196,22 @@ class Player:
 
         # Move the player left or right based on the movement flags
         if self.moving_right ^ self.moving_left:
+            # Calculate speed by multiplying by the multiplier and reducing speed by 50% if 
+            # the player is in a liquid
+            speed = self.speed * self.speed_multiplier * (0.5 if self.in_liquid else 1)
+
             if self.moving_left:
-                self.x -= self.speed * self.speed_multiplier * (0.5 if self.in_liquid else 1)
+                self.x -= speed
             elif self.moving_right:
-                self.x += self.speed * self.speed_multiplier * (0.5 if self.in_liquid else 1)
+                self.x += speed
 
-        # Stop y velocity and put y value in right place if clipping through floor 
-        if self.y + self.rect.height >= self.screen_height:
-            self.y = self.screen_height - self.rect.height
-            self.y_velocity = 0
+        # Don't let the player go thru the left or right of the screen
+        if self.x < 0:
+            self.x = 0
+        elif self.x + self.rect.width > self.screen_width:
+            self.x = self.screen_width - self.rect.width
 
+        # Update the rect x and y position
         self.rect.x = self.x
         self.rect.y = self.y
 
@@ -338,17 +349,21 @@ class Player:
             else:
                 image = self.right_jump_imgs[-1]
 
+        # The player is hurt
         elif self._state == HURT:
             image = self.hurt_images[self._frame]
             
+            # If the frame is the last one in the animation images
             if self._frame == len(self.hurt_images) - 1:
+                # Calculate what state kirby should be in next
                 if self.collided_bottom:
                     self._state = WALKING if self.moving_left ^ self.moving_right else IDLE
                 elif self.y_velocity > 0:
                     self._state = FALLING
                 else:
                     self._state = JUMPING
+                # Reset the animation frame back to 0
                 self._frame = 0
 
-        self._frame += 1
+        self._frame += 1  # Go to the next animation frame
         screen.blit(image, self.rect)

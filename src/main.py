@@ -1,6 +1,5 @@
 import sys 
 import json
-import time
 import pgzrun
 import settings
 
@@ -8,7 +7,7 @@ from boss import Boss
 from guard import Guard
 from player import Player
 from random import randint
-from constants import HURT, LEFT, RIGHT
+from constants import LEFT, RIGHT
 from pgzero.builtins import images
 
 
@@ -59,15 +58,26 @@ portal = Actor('blocks/portal')
 heart = images.heart
 empty_heart = images.empty_heart
 
-attacked = False 
 
 def draw():
-    """Draw the background image, the level, and the player to the screen"""
+    """
+    Draw the background image, the level, the player, 
+    the health bars of both the player and the boss, 
+    and also the enemies and bullets to the screen
+    """
+
+    # Draw the background 
+    # If its the first or last level, then draw an outside background
+    # otherwise draw a background of a castle
     if cur_level == 0 or cur_level == 4:
         screen.blit(bg_img, (0, 0))
     else:
         screen.blit(bg_img2, (0, 0))
+    
+    # Draw the blocks in the level to the screen
     draw_level(level_maps[cur_level])
+
+    # Draw the player to the screen
     player.blit(screen)
 
     # Draw enemies to the screen
@@ -91,13 +101,20 @@ def draw():
     # Draw the boss if they exist
     if boss is not None:
         boss.blit(screen)
-        # Draw boss bar
+
+        # Draw the boss bar 5 pixels down from the player's health bar
         max_boss_hp = settings.boss_hitpoints
         boss_hp = boss.hitpoints
         percent_hp = boss_hp / max_boss_hp
         bar_len = 600
-        screen.draw.filled_rect(Rect(0, heart.get_height()+5, bar_len*percent_hp, 30), (255, 0, 0))  # Draw boss bar 5 pixels down the hearts
-        screen.draw.filled_rect(Rect(bar_len*percent_hp, heart.get_height()+5, bar_len * (1-percent_hp), 30), (50, 50, 50))  # Draw the broken
+        bar_width = 30
+
+        # Draw the portion of the bar representing the remaining health in red, and the health gone in gray
+        y = heart.get_height() + 5
+        screen.draw.filled_rect(Rect(0, y, 
+                                     bar_len*percent_hp, bar_width), (255, 0, 0)) 
+        screen.draw.filled_rect(Rect(bar_len*percent_hp, y, 
+                                     bar_len * (1-percent_hp), bar_width), (50, 50, 50))
 
 
 
@@ -135,14 +152,15 @@ def update():
                 to_remove = []
                 break  # break out of the loop to avoid getting an error trying to remove things that are already removed
             to_remove.append(bullet)
-
+    
+    # Remove all the bullets that have 
     for bullet in to_remove:
         bullets.remove(bullet)
     
     # Killed all the enemies so portal opens
     if len(enemies) == 0 and boss is None:
         if portal.colliderect(player.rect):
-            # Apply any buff that are given
+            # Apply any buffs that are given for the completing the level
             buff = level_buffs[cur_level]
             if buff is not None:
                 if buff == 'strength':
@@ -152,6 +170,7 @@ def update():
                 elif buff == 'speed':
                     player.speed_multiplier = 1.3
 
+            # Load the next level. If its the last level, then quit
             cur_level += 1
             if cur_level == len(level_maps):
                 sys.exit()
@@ -165,41 +184,49 @@ def update():
         if not boss.dashing and not boss.just_attacked:
             boss.dash_attack()
         else:
+            # Boss is dashing, so update their x y position
             boss.update()
     
     # If player lost all their hitpoints (from boss attack), then reload the level
     if player.hitpoints <= 0:
         load_level(level_maps[cur_level])
-            
     
 
 def on_key_down(key):
     """Handle keydown events"""
+    # Move right if d or right arrow key pressed
     if key == keys.RIGHT or key == keys.D:
         player.moving_right = True
         player.direction_facing = RIGHT
+    # Move left if a or left arrow key pressed
     elif key == keys.LEFT or key == keys.A:
         player.moving_left = True
         player.direction_facing = LEFT
+    # Jump if up arrow key or w key pressed
     elif key == keys.UP or key == keys.W:
         player.jumping = True
 
 
 def on_key_up(key):
     """Handle keyup events"""
+    # Stop moving right if right arrow key or d key lifted up
     if key == keys.RIGHT or key == keys.D:
         player.moving_right = False
+    # Stop moving left if left arrow key or a key lifted up
     elif key == keys.LEFT or key == keys.A:
         player.moving_left = False
+    # Stop jumping if up arrow key or w key lifted up
     elif key == keys.UP or key == keys.W:
         player.jumping = False
 
 
 def on_mouse_down():
-    global boss
     """Attack when the player clicks the left or right mouse button"""
+    global boss
+    # Make player punch
     player.basic_attack()
-    if boss is not None and boss.hitpoints < 0:
+    # If player's attack made boss' health go lower than 1, then "kill" the boss
+    if boss is not None and boss.hitpoints <= 0:
         boss = None
 
 
@@ -225,7 +252,8 @@ def draw_level(level_map):
                 screen.blit(grass, (x, y))
             elif block_name == 'stone_brick':
                 screen.blit(stone_bricks, (x, y))
-            # Portal is an actor, not just an image surface because 
+            # Portal is an actor, not just an image surface because we 
+            # need to detect when the player enters the portal
             elif block_name == 'portal':
                 portal.left = x 
                 portal.top = y
@@ -247,14 +275,21 @@ def load_level(level_map):
 
     for i, row in enumerate(level_map):
         for j, block in enumerate(row):
+            # Get the block type and block anme
             block_type, name = blocks[block]['type'], blocks[block]['name']
+
+            # Calculate the x y position of the block
             block_width, block_height = 50, 50
             x, y = j*block_width, i*block_height
 
+            # Calculate rect if the block is solid and add to solid rects list
             if block_type == 'solid':
                 solid_rects.append(Rect(x, y, block_width, block_height))
+
+            # Caluclate rect if the block is liquid and add to liquid rects list
             elif block_type == 'liquid':
                 liquid_rects.append(Rect(x, y, block_width, block_height))
+
             elif name == 'guard':
                 # Create a guard, set its x y position to the block
                 # and make it shoot every 2-4 seconds
@@ -263,13 +298,17 @@ def load_level(level_map):
                 clock.schedule_interval(guard.shoot, 2 + randint(0, 2))
                 # clock.schedule_interval(guard.shoot, 0.5)
                 enemies.append(guard)
+            
+            # Spawn the player in the correct position and reset their hp
             elif name == 'player':
                 player.load_level(j*block_width, i*block_height, level_map)
+            
+            # Spawn the boss if there is one in the level
             elif name == 'boss':
                 boss = Boss(player)
-                player.boss = boss
+                # Make sure to add boss to the player instance so that it knows where 
+                player.boss = boss  
                 boss.set_pos(j*block_width, i*block_height)
-                # clock.schedule_interval(boss.attack, 1)  # Make the boss attack every three 3 seconds  # BUG: boss still attacks after dead because weak ref kept in player isntance
 
                 
 # Load the first level into memory
