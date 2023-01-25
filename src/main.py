@@ -153,8 +153,9 @@ def update():
                 break  # break out of the loop to avoid getting an error trying to remove things that are already removed
             to_remove.append(bullet)
     
-    # Remove all the bullets that have 
-    for bullet in to_remove:
+    # Remove all the bullets that have collided
+    while to_remove:
+        bullet = to_remove.pop()
         bullets.remove(bullet)
     
     # Killed all the enemies so portal opens
