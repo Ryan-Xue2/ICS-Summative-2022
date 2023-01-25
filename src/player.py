@@ -57,10 +57,9 @@ class Player:
         # Images for the player moving left
         self.moving_left_imgs = []
         for filename in os.listdir('images/kirby/left_walk'):
-            print(filename)
             filename = filename.split('.')[0]
-            self.moving_left_imgs.append(f'kirby/left_walk/{filename}')
-            print(filename)
+            # I am using .format instead of fstring to meet requirement of using string methods
+            self.moving_left_imgs.append('kirby/left_walk/{}'.format(filename))
         
         # Images for the player moving right
         self.moving_right_imgs = []
@@ -89,7 +88,6 @@ class Player:
         # Images of the player jumping to the right
         self.right_jump_imgs = []
         for filename in os.listdir('images/kirby/right_jump'):
-            print(filename)
             filename = filename.split('.')[0]
             self.right_jump_imgs.append(f'kirby/right_jump/{filename}')
         
