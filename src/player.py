@@ -206,6 +206,7 @@ class Player:
                 self.x += speed
 
         # Don't let the player go thru the left or right of the screen
+        # by pushing them back if they try
         if self.x < 0:
             self.x = 0
         elif self.x + self.rect.width > self.screen_width:

@@ -41,7 +41,8 @@ HEIGHT = settings.screen_height
 player = Player(WIDTH, HEIGHT, level_maps[cur_level], solid_rects, liquid_rects, enemies)
 boss = None
 
-# The background images
+# The background images, one being outdoors and with mountains, and the 
+# other one is the inside of a castle
 bg_img = images.background
 bg_img2 = images.castle_background
 
@@ -88,7 +89,7 @@ def draw():
     for bullet in bullets:
         bullet.draw()
 
-    # Draw hearts representing player's health
+    # Draw hearts representing player's health to the screen
     for i in range(player.hitpoints):
         screen.blit(heart, (i*heart.get_width()+1, 0))
 
@@ -121,7 +122,6 @@ def draw():
 def update():
     """Update the positions and hitpoints of the player and the enemies"""
     global boss
-    global attacked
     global cur_level
 
     player.update()  # Update the player's position, state, etc
